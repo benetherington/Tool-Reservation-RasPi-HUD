@@ -65,13 +65,13 @@ class App:
         Label(master, text="Universal Laser").grid(         row=1, column=0, sticky=W)
 
         if get_reservations()["current"]: # Display if someone's currently on the tool
-            Label( master, text="Current user:"+get_reservations()["current"][2] ).grid(                                          row=2, column=1)
-            Label( master, text="00:00:00" ).grid(                                                                                row=3, column=1)
-            Label( master, text="Next user: "+get_reservations()["next"][2]+" at "+hour_min(get_reservations()["next"][0]) ).grid(row=4, column=1)
+            Label( master, text="Current user: "+get_reservations()["current"]['name']+' until '+hour_min(get_reservations()['current']['end']) ).grid(row=2, column=1)
+            Label( master, text="00:00:00" ).grid(                                                                                                     row=3, column=1)
+            Label( master, text="Next user: "+get_reservations()["next"]['name']+" at "+hour_min(get_reservations()["next"]['start']) ).grid(          row=4, column=1)
         else:                             # Display if the tool is free
-            Label( master, text="Free use" ).grid(                                                                                row=2, column=1)
-            Label( master, text="00:00:00" ).grid(                                                                                row=3, column=1)
-            Label( master, text="Next user: "+get_reservations()["next"][2]+" at "+hour_min(get_reservations()["next"][0]) ).grid(row=4, column=1)
+            Label( master, text="Free use" ).grid(                                                                                                     row=2, column=1)
+            Label( master, text="00:00:00" ).grid(                                                                                                     row=3, column=1)
+            Label( master, text="Next user: "+get_reservations()["next"]['name']+" at "+hour_min(get_reservations()["next"]['start']) ).grid(          row=4, column=1)
 
 
 root = Tk()
