@@ -38,17 +38,15 @@ def get_reservations():
     calendar = poll_gcalendar()
     events = []
 
-    # print(type(calendar).__name__)
-
     for component in calendar.walk():
         if component.name == "VEVENT" and hasattr(component.get('dtstart').dt, "time"):
             events.append( [component.get('dtstart').dt, component.get('dtend').dt, component.get('summary')] )
 
-    sorted_events = sorted(events, key= lambda component: component[0])
-    upcoming_events = list( [tstart, tend, description] for tstart, tend, description in sorted_events if tend > datetime.now().astimezone(get_localzone()) )
+    sorted_events = sorted(events, key= lambda component: component[0]) # sort events
+    upcoming_events = list( {'start': tstart, 'end': tend, 'name': tsummary} for tstart, tend, tsummary in sorted_events if tend > datetime.now().astimezone(get_localzone()) ) # discard events in the past, build a list for those in the future. Weird 't' prependatures to not use keyword 'end'
 
-    if upcoming_events[0][0] < datetime.now().astimezone(get_localzone()):
-        current_reservation = upcoming_events[0]
+    if upcoming_events[0]['start'] < datetime.now().astimezone(get_localzone()):    # Decide if there's a current reservation or not
+        current_reservation = upcoming_events[0]                                    # TODO: parse summary to just retain user's name
         next_reservation = upcoming_events[1]
     else:
         current_reservation = None
