@@ -1,6 +1,7 @@
 from icalendar import Calendar, Event, vDatetime
 from datetime import datetime, timezone, timedelta
 from tzlocal import get_localzone
+from math import floor
 from urllib.request import urlopen
 from tkinter import *
 
@@ -56,23 +57,47 @@ def get_reservations():
     # return {"current": None, "next": ["next start", "next end", "next description"]}
 
 def hour_min(date_time): #TODO: add relative date if this is too far in the future
-    return str(date_time.hour)+":"+str('{:02d}'.format(date_time.minute))
+    if type(date_time).__name__ == "datetime":
+        return str(date_time.astimezone(get_localzone()).hour)+":"+str('{:02d}'.format(date_time.minute))
+    elif type(date_time).__name__ == "timedelta":
+        if date_time.days>1:
+            return str(date_time.days)+" days"
+        else:
+            date_time.seconds = 0
+            return str(floor(date_time.total_seconds/3600))+":"+str('{:02d}'.format(floor( (date_time.total_seconds/60)%60 )))+":"+str('{:02d}'.format(floor( date_time.total_seconds%60 )))
 
 class App:
     def __init__(self, master):
+        self.master = master
+
         # HEADER
-        Label(master, text="IFL Tool Reservation HUD").grid(row=0, column=0, sticky=W)
-        Label(master, text="Universal Laser").grid(         row=1, column=0, sticky=W)
+        header = LabelFrame(master, text="IFL Tool Reservation HUD")
+        header.grid(row=0, column=0, columnspan=2)
+        Label(header, text="Universal Laser").grid(         row=1, column=0, columnspan=2)
 
+        display = LabelFrame(master, bd=3, relief=RAISED)
+        display.grid(row=2, column=1, columnspan=2)
+
+        Label(master, text="Don't pretend you didn't know.®", font=("arial", 9)).grid(row=3, column=2)
+
+        self.clear_display(display)
+        self.update_display(display)
+
+    def update_display(self, target):
         if get_reservations()["current"]: # Display if someone's currently on the tool
-            Label( master, text="Current user: "+get_reservations()["current"]['name']+' until '+hour_min(get_reservations()['current']['end']) ).grid(row=2, column=1)
-            Label( master, text="00:00:00" ).grid(                                                                                                     row=3, column=1)
-            Label( master, text="Next user: "+get_reservations()["next"]['name']+" at "+hour_min(get_reservations()["next"]['start']) ).grid(          row=4, column=1)
+            target.config( text="Current user: "+get_reservations()["current"]['name']+' until '+hour_min(get_reservations()['current']['end']) )
+            Label( target,  text=str( get_reservations()["current"]["end"]-datetime.now().astimezone(get_localzone()) )).grid(                          row=1, column=0)
+            Label( target,  text="Next user: "+get_reservations()["next"]['name']+" at "+hour_min(get_reservations()["next"]['start']) ).grid(          row=2, column=0)
         else:                             # Display if the tool is free
-            Label( master, text="Free use" ).grid(                                                                                                     row=2, column=1)
-            Label( master, text="00:00:00" ).grid(                                                                                                     row=3, column=1)
-            Label( master, text="Next user: "+get_reservations()["next"]['name']+" at "+hour_min(get_reservations()["next"]['start']) ).grid(          row=4, column=1)
+            target.config( text="Free to use!" )
+            Label( target, text=str(hour_min( get_reservations()["next"]["start"]-datetime.now().astimezone(get_localzone()) )) ).grid(                row=1, column=0)
+            Label( target, text="Next user: "+get_reservations()["next"]['name']+" at "+hour_min(get_reservations()["next"]['start']) ).grid(          row=2, column=0)
+        self.master.after(1000, self.update_display, target)
 
+    def clear_display(self, target):
+        for widget in target.winfo_children():
+            widget.destroy()
+        self.master.after(100000, self.clear_display, target)
 
 root = Tk()
 
