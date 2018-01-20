@@ -63,8 +63,7 @@ def hour_min(date_time): #TODO: add relative date if this is too far in the futu
         if date_time.days>1:
             return str(date_time.days)+" days"
         else:
-            date_time.seconds = 0
-            return str(floor(date_time.total_seconds/3600))+":"+str('{:02d}'.format(floor( (date_time.total_seconds/60)%60 )))+":"+str('{:02d}'.format(floor( date_time.total_seconds%60 )))
+            return str(floor(date_time.total_seconds()/3600))+":"+str('{:02d}'.format(floor( (date_time.total_seconds()/60)%60 )))+":"+str('{:02d}'.format(floor( date_time.total_seconds()%60 )))
 
 class App:
     def __init__(self, master):
@@ -74,24 +73,24 @@ class App:
         header = LabelFrame(master, text="IFL Tool Reservation HUD")
         header.grid(row=0, column=0, columnspan=2)
         Label(header, text="Universal Laser").grid(         row=1, column=0, columnspan=2)
-
+        # CONTENT
         display = LabelFrame(master, bd=3, relief=RAISED)
         display.grid(row=2, column=1, columnspan=2)
-
+        # FOOTER
         Label(master, text="Don't pretend you didn't know.®", font=("arial", 9)).grid(row=3, column=2)
-
+        # BEHAVIORS
         self.clear_display(display)
         self.update_display(display)
 
     def update_display(self, target):
         if get_reservations()["current"]: # Display if someone's currently on the tool
             target.config( text="Current user: "+get_reservations()["current"]['name']+' until '+hour_min(get_reservations()['current']['end']) )
-            Label( target,  text=str( get_reservations()["current"]["end"]-datetime.now().astimezone(get_localzone()) )).grid(                          row=1, column=0)
-            Label( target,  text="Next user: "+get_reservations()["next"]['name']+" at "+hour_min(get_reservations()["next"]['start']) ).grid(          row=2, column=0)
+            Label( target,  text=hour_min( get_reservations()["current"]["end"]-datetime.now().astimezone(get_localzone()) ), font=("arial", 20)).grid(            row=1, column=0)
+            Label( target,  text="Next user: "+get_reservations()["next"]['name']+" at "+hour_min(get_reservations()["next"]['start']) ).grid(                row=2, column=0)
         else:                             # Display if the tool is free
             target.config( text="Free to use!" )
-            Label( target, text=str(hour_min( get_reservations()["next"]["start"]-datetime.now().astimezone(get_localzone()) )) ).grid(                row=1, column=0)
-            Label( target, text="Next user: "+get_reservations()["next"]['name']+" at "+hour_min(get_reservations()["next"]['start']) ).grid(          row=2, column=0)
+            Label( target, text=hour_min( get_reservations()["next"]["start"]-datetime.now().astimezone(get_localzone()) ), font=("arial", 20) ).grid(   row=1, column=0)
+            Label( target, text="Next user: "+get_reservations()["next"]['name']+" at "+hour_min(get_reservations()["next"]['start']) ).grid(                 row=2, column=0)
         self.master.after(1000, self.update_display, target)
 
     def clear_display(self, target):
