@@ -14,49 +14,42 @@ def poll_gcalendar():
     '''
     Downloads ICS file from Google Calendar, and returns it as a string.
     '''
-
     global last_request_time
-    # print("last_request_time: " + str(last_request_time))
-    # print("last_request_time delta:" + str(last_request_time+timedelta(seconds=max_request_interval)))
-    # print("now:                    " + str(datetime.now()))
-    # print("delta delta: " + str(last_request_time+timedelta(seconds=max_request_interval) - datetime.now()))
     if datetime.now()-last_request_time > timedelta(seconds=max_request_interval):               # only pull data from the internet if it's been longer than the interval.
         global last_obtained_data
         last_obtained_data = Calendar().from_ical(urlopen(url).read().decode('iso-8859-1'))
         last_request_time  = datetime.now()
-        print("sent HTTP request to gcal")
-        
+        print("sent HTTP request to gcal") 
     return last_obtained_data
 
 def get_reservations():
     '''
-    sorts them and returns the most helpful.
+    Asks for the list of calendar events, parses them, sorts them and returns the most helpful.
 
-    Returns a dict for the current reservation and the next reservation, which are an array of the beginning time, ending time and description.
+    Returns a dict for the current reservation and the next reservation, which are dicts of the beginning time, ending time and description.
     Returns None for the first if there`s no reservation in effect.
     '''
-
     calendar = poll_gcalendar()
     events = []
-
-    for component in calendar.walk():
+    for component in calendar.walk():                                               # parse events
         if component.name == "VEVENT" and hasattr(component.get('dtstart').dt, "time"):
             events.append( [component.get('dtstart').dt, component.get('dtend').dt, component.get('summary')] )
-
-    sorted_events = sorted(events, key= lambda component: component[0]) # sort events
+    sorted_events = sorted(events, key= lambda component: component[0])             # sort events
     upcoming_events = list( {'start': tstart, 'end': tend, 'name': tsummary} for tstart, tend, tsummary in sorted_events if tend > datetime.now().astimezone(get_localzone()) ) # discard events in the past, build a list for those in the future. Weird 't' prependatures to not use keyword 'end'
-
     if upcoming_events[0]['start'] < datetime.now().astimezone(get_localzone()):    # Decide if there's a current reservation or not
         current_reservation = upcoming_events[0]                                    # TODO: parse summary to just retain user's name
         next_reservation = upcoming_events[1]
     else:
         current_reservation = None
         next_reservation = upcoming_events[0]
-
     return {"current": current_reservation, "next": next_reservation}
-    # return {"current": None, "next": ["next start", "next end", "next description"]}
 
-def hour_min(date_time): #TODO: add relative date if this is too far in the future
+def hour_min(date_time):
+    '''
+    Returns a tidy string for a given datetime or timedelta.
+
+    Returns hour:minute for datetimes, XX days for long timedeltas and hour:minute:second for short ones.
+    '''
     if type(date_time).__name__ == "datetime":
         return str(date_time.astimezone(get_localzone()).hour)+":"+str('{:02d}'.format(date_time.minute))
     elif type(date_time).__name__ == "timedelta":
