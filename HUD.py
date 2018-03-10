@@ -1,6 +1,8 @@
+# These do not come with Raspbien and need to be installed
 from icalendar import Calendar, Event, vDatetime
-from datetime import datetime, timezone, timedelta
 from tzlocal import get_localzone
+
+from datetime import datetime, timezone, timedelta
 from math import floor
 from urllib.request import urlopen
 from tkinter import *
@@ -12,7 +14,7 @@ last_obtained_data = ""
 
 def poll_gcalendar():
     '''
-    Downloads ICS file from Google Calendar, and returns it as a string.
+    Downloads ICS file from Google Calendar, and returns it as a string. Limits HTTP requests to Google.
     '''
     global last_request_time
     if datetime.now()-last_request_time > timedelta(seconds=max_request_interval):               # only pull data from the internet if it's been longer than the interval.
