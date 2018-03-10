@@ -63,30 +63,40 @@ def hour_min(date_time):
 class App:
     def __init__(self, master):
         self.master = master
+        master.geometry("800x480")
 
         # HEADER
         header = LabelFrame(master, text="IFL Tool Reservation HUD")
-        header.grid(row=0, column=0, columnspan=2)
-        Label(header, text="Universal Laser").grid(         row=1, column=0, columnspan=2)
+        header.grid(row=0, column=0, columnspan=2, sticky=N+S+E+W)
+        Label(header, text="Universal Laser").grid( row=1, column=0, columnspan=2)
         # CONTENT
-        display = LabelFrame(master, bd=3, relief=RAISED)
-        display.grid(row=2, column=1, columnspan=2)
+        current = LabelFrame(master, bd=3, relief=RAISED)
+        current.grid(row=2, column=1, columnspan=2)
+        upcoming = LabelFrame(master, bd=3, relief=RAISED)
+        upcoming.grid(row=3, column=1, columnspan=2)
         # FOOTER
-        Label(master, text="Don't pretend you didn't know.®", font=("arial", 9)).grid(row=3, column=2)
+        Label(master, text="Don't pretend you didn't know.®", font=("arial", 9)).grid(row=4, column=2)
         # BEHAVIORS
-        self.clear_display(display)
-        self.update_display(display)
+        self.clear_display(current)
+        self.update_current(current)
+        self.clear_display(upcoming)
+        self.update_upcoming(upcoming)
 
-    def update_display(self, target):
+    def update_current(self, target):
         if get_reservations()["current"]: # Display if someone's currently on the tool
-            target.config( text="Current user: "+get_reservations()["current"]['name']+' until '+hour_min(get_reservations()['current']['end']) )
-            Label( target,  text=hour_min( get_reservations()["current"]["end"]-datetime.now().astimezone(get_localzone()) ), font=("arial", 20)).grid(            row=1, column=0)
-            Label( target,  text="Next user: "+get_reservations()["next"]['name']+" at "+hour_min(get_reservations()["next"]['start']) ).grid(                row=2, column=0)
+            target.config( text="In use" )
+            Label( target,  text=hour_min( get_reservations()["current"]["end"]-datetime.now().astimezone(get_localzone()) ), font=("arial", 20)).grid(row=0)
+            Label(target, text=get_reservations()["current"]['name']+' until '+hour_min(get_reservations()['current']['end']) ).grid(row=1)
         else:                             # Display if the tool is free
             target.config( text="Free to use!" )
             Label( target, text=hour_min( get_reservations()["next"]["start"]-datetime.now().astimezone(get_localzone()) ), font=("arial", 20) ).grid(   row=1, column=0)
-            Label( target, text="Next user: "+get_reservations()["next"]['name']+" at "+hour_min(get_reservations()["next"]['start']) ).grid(                 row=2, column=0)
-        self.master.after(1000, self.update_display, target)
+
+        self.master.after(1000, self.update_current, target)
+
+    def update_upcoming(self, target):
+        target.config( text="Upcoming reservations" )
+        Label( target, text="Next user: "+get_reservations()["next"]['name']+" at "+hour_min(get_reservations()["next"]['start']) ).grid(                 row=2, column=0)
+        self.master.after(10000, self.update_upcoming, target)
 
     def clear_display(self, target):
         for widget in target.winfo_children():
